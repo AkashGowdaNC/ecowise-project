@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌱 EcoWise - AI Circular Economy</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>🌱 EcoWise</h1>
+            <p>AI-Powered Circular Economy Platform</p>
+        </header>
+
+        <!-- Main Content -->
+        <main>
+            <!-- Upload Section -->
+            <section class="upload-section">
+                <h2>📸 Upload Item Image</h2>
+                <div class="upload-box">
+                    <input type="file" id="imageUpload" accept="image/*">
+                    <label for="imageUpload" class="upload-btn">
+                        Choose Image or Take Photo
+                    </label>
+                </div>
+                <button onclick="analyzeImage()" class="analyze-btn">
+                    🤖 Analyze with AI
+                </button>
+            </section>
+
+            <!-- Results Section -->
+            <section class="results-section" id="results" style="display: none;">
+                <h2>🎯 Analysis Results</h2>
+                <div id="resultsContent">
+                    <!-- Results will appear here -->
+                </div>
+            </section>
+
+            <!-- User Profile -->
+            <section class="profile-section">
+                <h2>👤 Your Eco Profile</h2>
+                <div id="profileContent">
+                    Loading...
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer>
+            <p>Built with ❤️ for <INFOTHON/> 5.0</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+<!-- Add this after the upload button -->
+<div id="imagePreview" class="image-preview-area"></div>
+<button onclick="exportUserData()" class="export-btn">
+    📤 Export My Data
+</button>
+<button onclick="startDemoMode()" class="demo-btn" style="background: #EC4899;">
+    🎬 Start Demo Mode
+</button>

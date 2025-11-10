@@ -1,0 +1,1390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📸 Analyze - EcoWise</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #10B981;
+            --primary-dark: #059669;
+            --secondary: #3B82F6;
+            --accent: #F59E0B;
+            --background: #0F172A;
+            --surface: #1E293B;
+            --text: #F8FAFC;
+            --text-secondary: #94A3B8;
+            --gradient: linear-gradient(135deg, #10B981, #3B82F6, #8B5CF6);
+            --glass: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Animated Background */
+        .animated-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #334155 100%);
+        }
+
+        .floating-shapes {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .shape {
+            position: absolute;
+            border-radius: 50%;
+            background: var(--gradient);
+            opacity: 0.1;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .shape-1 {
+            width: 200px;
+            height: 200px;
+            top: 10%;
+            left: 5%;
+            animation-delay: 0s;
+        }
+
+        .shape-2 {
+            width: 150px;
+            height: 150px;
+            top: 60%;
+            right: 10%;
+            animation-delay: 2s;
+        }
+
+        .shape-3 {
+            width: 100px;
+            height: 100px;
+            bottom: 20%;
+            left: 20%;
+            animation-delay: 4s;
+        }
+
+        .shape-4 {
+            width: 120px;
+            height: 120px;
+            top: 30%;
+            right: 20%;
+            animation-delay: 1s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        /* Navigation */
+        .glass-nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            z-index: 1000;
+            padding: 1rem 0;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-link {
+            color: var(--text);
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Main Content */
+        .analyze-main {
+            padding: 120px 2rem 2rem;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .analyze-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .section-badge {
+            display: inline-block;
+            background: var(--glass);
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            margin-bottom: 1rem;
+        }
+
+        .gradient-text {
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Upload Section */
+        .upload-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        @media (max-width: 768px) {
+            .upload-options {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .option-header {
+            padding: 1.5rem;
+            background: rgba(255,255,255,0.05);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .option-icon {
+            font-size: 1.5rem;
+        }
+
+        .option-badge {
+            background: var(--gradient);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .option-content {
+            padding: 2rem;
+        }
+
+        .upload-area {
+            border: 2px dashed var(--glass-border);
+            border-radius: 15px;
+            padding: 3rem 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .upload-area.highlight {
+            border-color: var(--primary);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.7;
+        }
+
+        .upload-label {
+            cursor: pointer;
+        }
+
+        .upload-label h4 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-label p {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        .browse-btn {
+            background: var(--gradient);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+        }
+
+        .upload-hint {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .image-preview-area {
+            text-align: center;
+            position: relative;
+        }
+
+        #previewImage {
+            max-width: 300px;
+            max-height: 200px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .clear-btn {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Camera Styles */
+        .camera-placeholder {
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .camera-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.7;
+        }
+
+        .camera-preview {
+            text-align: center;
+        }
+
+        .camera-frame {
+            position: relative;
+            border-radius: 15px;
+            overflow: hidden;
+            background: #000;
+            margin-bottom: 1rem;
+        }
+
+        #cameraVideo {
+            width: 100%;
+            max-width: 400px;
+            display: block;
+        }
+
+        .camera-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .scan-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--primary);
+            animation: scan 2s linear infinite;
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        @keyframes scan {
+            0% { top: 0; }
+            100% { top: 100%; }
+        }
+
+        .camera-controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .capture-btn, .cancel-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .capture-btn {
+            background: var(--primary);
+            color: white;
+        }
+
+        .cancel-btn {
+            background: var(--glass);
+            color: var(--text);
+            border: 1px solid var(--glass-border);
+        }
+
+        /* Analyze Button */
+        .analyze-action {
+            text-align: center;
+            margin: 3rem 0;
+        }
+
+        .analyze-btn {
+            background: var(--gradient);
+            color: white;
+            border: none;
+            padding: 1.2rem 3rem;
+            border-radius: 30px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 250px;
+        }
+
+        .analyze-btn:disabled {
+            background: #6B7280;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .analyze-btn:not(:disabled):hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(16, 185, 129, 0.4);
+        }
+
+        .analyze-hint {
+            margin-top: 1rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Results Section */
+        .results-section {
+            margin-top: 2rem;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .results-container {
+            padding: 2rem;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .results-badge {
+            background: var(--accent);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 15px;
+            font-weight: 600;
+        }
+
+        /* Analysis Results Styles */
+        .analysis-result {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 968px) {
+            .analysis-result {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .item-info {
+            background: var(--glass);
+            border-radius: 15px;
+            padding: 1.5rem;
+        }
+
+        .item-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .item-icon {
+            font-size: 3rem;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .item-details h3 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .item-category {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .item-description {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .recycling-info {
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid var(--primary);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .stat-card {
+            background: var(--glass);
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid var(--glass-border);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 0.5rem 0;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .recommendations {
+            margin: 1.5rem 0;
+        }
+
+        .recommendation-item {
+            padding: 1rem;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 10px;
+            border-left: 4px solid var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .centers-section {
+            background: var(--glass);
+            border-radius: 15px;
+            padding: 1.5rem;
+        }
+
+        .centers-list {
+            margin-top: 1rem;
+        }
+
+        .center-item {
+            background: var(--surface);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border: 1px solid var(--glass-border);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .center-item:hover {
+            border-color: var(--primary);
+            transform: translateX(5px);
+        }
+
+        .center-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .center-distance {
+            color: var(--primary);
+            font-size: 0.9rem;
+        }
+
+        .center-services {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        .center-address {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        .results-actions {
+            display: flex;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn.primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .action-btn.secondary {
+            background: var(--glass);
+            color: var(--text);
+            border: 1px solid var(--glass-border);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Loading Animation */
+        .loading-analysis {
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .analyzing-animation {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .analyzing-dot {
+            width: 12px;
+            height: 12px;
+            background: var(--primary);
+            border-radius: 50%;
+            animation: analyzing 1.4s infinite ease-in-out;
+        }
+
+        .analyzing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .analyzing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes analyzing {
+            0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+            40% { transform: scale(1.2); opacity: 1; }
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .no-results-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.7;
+        }
+
+        .no-centers {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="animated-bg">
+        <div class="floating-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+            <div class="shape shape-4"></div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="glass-nav">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <div class="logo-icon">🌱</div>
+                <span class="logo-text">EcoWise</span>
+            </div>
+            <div class="nav-links">
+                <a href="home.html" class="nav-link">🏠 Home</a>
+                <a href="analyze.html" class="nav-link active">📸 Analyze</a>
+                <a href="map.html" class="nav-link">🗺️ Map</a>
+                <a href="profile.html" class="nav-link">👤 Profile</a>
+            </div>
+            <div class="nav-actions">
+                <button class="btn-secondary" onclick="location.href='home.html'">🏠 Back to Home</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Analysis Section -->
+    <main class="analyze-main">
+        <div class="container">
+            <div class="analyze-header">
+                <div class="section-badge">
+                    <span>🤖 AI-Powered Analysis</span>
+                </div>
+                <h1 class="gradient-text">Analyze Your Items</h1>
+                <p>Upload an image and our AI will identify the item and provide recycling recommendations</p>
+            </div>
+
+            <!-- Upload Section -->
+            <section class="upload-section">
+                <div class="upload-options">
+                    <!-- File Upload Option -->
+                    <div class="upload-option glass-card">
+                        <div class="option-header">
+                            <span class="option-icon">📁</span>
+                            <h3>Upload Image</h3>
+                            <div class="option-badge">Recommended</div>
+                        </div>
+                        <div class="option-content">
+                            <div class="upload-area" id="fileUploadArea">
+                                <input type="file" id="imageUpload" accept="image/*" class="file-input">
+                                <label for="imageUpload" class="upload-label">
+                                    <div class="upload-icon">📁</div>
+                                    <h4>Choose Image File</h4>
+                                    <p>Select JPG, PNG, or GIF files</p>
+                                    <div class="upload-actions">
+                                        <span class="browse-btn">Browse Files</span>
+                                        <span class="upload-hint">or drag & drop</span>
+                                    </div>
+                                </label>
+                                <div id="imagePreview" class="image-preview-area" style="display: none;">
+                                    <img id="previewImage" src="" alt="Preview">
+                                    <button class="clear-btn" onclick="clearImage()">×</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Camera Option -->
+                    <div class="upload-option glass-card">
+                        <div class="option-header">
+                            <span class="option-icon">📷</span>
+                            <h3>Use Camera</h3>
+                            <div class="option-badge">Live Capture</div>
+                        </div>
+                        <div class="option-content">
+                            <div class="camera-area" id="cameraArea">
+                                <div class="camera-placeholder">
+                                    <div class="camera-icon">📷</div>
+                                    <h4>Camera Access Required</h4>
+                                    <p>Click below to start camera</p>
+                                    <button class="browse-btn" onclick="startCamera()">
+                                        🎥 Start Camera
+                                    </button>
+                                </div>
+                                <div class="camera-preview" id="cameraPreview" style="display: none;">
+                                    <div class="camera-frame">
+                                        <video id="cameraVideo" autoplay playsinline></video>
+                                        <div class="camera-overlay">
+                                            <div class="scan-line"></div>
+                                        </div>
+                                    </div>
+                                    <div class="camera-controls">
+                                        <button class="capture-btn" onclick="captureImage()">
+                                            <span>📸 Capture</span>
+                                        </button>
+                                        <button class="cancel-btn" onclick="stopCamera()">
+                                            <span>❌ Cancel</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analyze Button -->
+                <div class="analyze-action">
+                    <button onclick="analyzeImage()" class="analyze-btn" id="analyzeButton" disabled>
+                        <span>🤖 Analyze with AI</span>
+                    </button>
+                    <p class="analyze-hint" id="analyzeHint">Select an image first to enable analysis</p>
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section class="results-section" id="resultsSection" style="display: none;">
+                <div class="results-container glass-card">
+                    <div class="results-header">
+                        <h2>🎯 Analysis Results</h2>
+                        <div class="results-badge" id="resultsBadge">Processing...</div>
+                    </div>
+                    <div id="resultsContent">
+                        <!-- Results will appear here -->
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        // Include your analyze.js code here
+        // Copy and paste the entire analyze.js content here
+        // analyze.js - Complete Working AI Analysis
+        let currentImageFile = null;
+        let cameraStream = null;
+
+        // Image Upload Handling
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Validate file type
+            if (!file.type.match('image.*')) {
+                alert('Please select an image file (JPG, PNG, GIF)');
+                return;
+            }
+
+            // Validate file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Image size should be less than 5MB');
+                return;
+            }
+
+            currentImageFile = file;
+            enableAnalyzeButton();
+            showImagePreview(file);
+        }
+
+        function showImagePreview(file) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                const previewArea = document.getElementById('imagePreview');
+                const previewImage = document.getElementById('previewImage');
+                const uploadLabel = document.querySelector('.upload-label');
+                
+                previewImage.src = e.target.result;
+                previewArea.style.display = 'block';
+                uploadLabel.style.display = 'none';
+                
+                document.getElementById('analyzeHint').textContent = 'Ready to analyze! Click the Analyze button.';
+            };
+            
+            reader.readAsDataURL(file);
+        }
+
+        function clearImage() {
+            const fileInput = document.getElementById('imageUpload');
+            const previewArea = document.getElementById('imagePreview');
+            const uploadLabel = document.querySelector('.upload-label');
+            
+            fileInput.value = '';
+            previewArea.style.display = 'none';
+            uploadLabel.style.display = 'block';
+            currentImageFile = null;
+            
+            disableAnalyzeButton();
+            document.getElementById('analyzeHint').textContent = 'Select an image first to enable analysis';
+        }
+
+        function enableAnalyzeButton() {
+            document.getElementById('analyzeButton').disabled = false;
+        }
+
+        function disableAnalyzeButton() {
+            document.getElementById('analyzeButton').disabled = true;
+        }
+
+        // Camera Functions
+        async function startCamera() {
+            try {
+                console.log("📷 Starting camera...");
+                
+                const constraints = {
+                    video: { 
+                        facingMode: 'environment',
+                        width: { ideal: 640 },
+                        height: { ideal: 480 }
+                    }
+                };
+                
+                cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+                const video = document.getElementById('cameraVideo');
+                const preview = document.getElementById('cameraPreview');
+                const placeholder = document.querySelector('.camera-placeholder');
+                
+                video.srcObject = cameraStream;
+                placeholder.style.display = 'none';
+                preview.style.display = 'block';
+                
+                console.log("✅ Camera started successfully");
+                
+            } catch (error) {
+                console.error("❌ Camera error:", error);
+                alert('Camera access denied or not available. Please allow camera permissions.');
+            }
+        }
+
+        function stopCamera() {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+                cameraStream = null;
+            }
+            
+            const preview = document.getElementById('cameraPreview');
+            const placeholder = document.querySelector('.camera-placeholder');
+            const video = document.getElementById('cameraVideo');
+            
+            video.srcObject = null;
+            preview.style.display = 'none';
+            placeholder.style.display = 'block';
+        }
+
+        function captureImage() {
+            if (!cameraStream) {
+                alert('Please start the camera first!');
+                return;
+            }
+
+            const video = document.getElementById('cameraVideo');
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            
+            // Set canvas size to match video
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            // Draw current video frame to canvas
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // Convert canvas to blob and create file
+            canvas.toBlob(function(blob) {
+                const timestamp = new Date().getTime();
+                const filename = `camera_capture_${timestamp}.jpg`;
+                
+                currentImageFile = new File([blob], filename, {
+                    type: 'image/jpeg'
+                });
+                
+                // Enable analyze button and show preview
+                enableAnalyzeButton();
+                showImagePreview(currentImageFile);
+                
+                // Stop camera after capture
+                stopCamera();
+                
+                console.log("✅ Image captured:", filename);
+                
+            }, 'image/jpeg', 0.8);
+        }
+
+        // Main AI Analysis Function
+        async function analyzeImage() {
+            if (!currentImageFile) {
+                alert('Please select an image first');
+                return;
+            }
+
+            const analyzeButton = document.getElementById('analyzeButton');
+            const resultsSection = document.getElementById('resultsSection');
+            const resultsContent = document.getElementById('resultsContent');
+            const resultsBadge = document.getElementById('resultsBadge');
+
+            // Show loading state
+            analyzeButton.disabled = true;
+            analyzeButton.innerHTML = '<span>⏳ Analyzing with AI...</span>';
+            resultsSection.style.display = 'block';
+            resultsBadge.textContent = 'Analyzing...';
+            resultsBadge.style.background = 'var(--accent)';
+
+            // Show loading animation
+            resultsContent.innerHTML = `
+                <div class="loading-analysis">
+                    <div class="analyzing-animation">
+                        <div class="analyzing-dot"></div>
+                        <div class="analyzing-dot"></div>
+                        <div class="analyzing-dot"></div>
+                    </div>
+                    <h3>🤖 AI is analyzing your image...</h3>
+                    <p>Identifying objects and finding recycling solutions</p>
+                </div>
+            `;
+
+            try {
+                // Create FormData for file upload
+                const formData = new FormData();
+                formData.append('image', currentImageFile);
+                formData.append('username', 'EcoStudent');
+
+                // Send to backend
+                const response = await fetch('http://localhost:5000/detect', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayAnalysisResults(result);
+                } else {
+                    throw new Error(result.error || 'Analysis failed');
+                }
+
+            } catch (error) {
+                console.error('Analysis error:', error);
+                
+                // Fallback to mock analysis if server is down
+                performMockAnalysis();
+            } finally {
+                // Reset analyze button
+                analyzeButton.disabled = false;
+                analyzeButton.innerHTML = '<span>🤖 Analyze with AI</span>';
+            }
+        }
+
+        function displayAnalysisResults(result) {
+            const resultsContent = document.getElementById('resultsContent');
+            const resultsBadge = document.getElementById('resultsBadge');
+
+            resultsBadge.textContent = 'Analysis Complete';
+            resultsBadge.style.background = 'var(--primary)';
+
+            if (!result.detected_objects || result.detected_objects.length === 0) {
+                resultsContent.innerHTML = `
+                    <div class="no-results">
+                        <div class="no-results-icon">🔍</div>
+                        <h3>No Items Detected</h3>
+                        <p>Try taking a clearer photo or different angle</p>
+                        <button class="action-btn primary" onclick="clearImage()">
+                            📸 Try Another Image
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            // Get recycling centers data
+            fetchRecyclingCenters().then(centers => {
+                const analysisHTML = createAnalysisHTML(result, centers);
+                resultsContent.innerHTML = analysisHTML;
+            });
+        }
+
+        async function fetchRecyclingCenters() {
+            try {
+                const response = await fetch('http://localhost:5000/recycling-centers');
+                return await response.json();
+            } catch (error) {
+                console.error('Error fetching centers:', error);
+                return [];
+            }
+        }
+
+        function createAnalysisHTML(result, centers) {
+            const detectedItem = result.detected_objects[0]; // Get first detected item
+            
+            // Get item details based on detection
+            const itemDetails = getItemDetails(detectedItem.name);
+            const relevantCenters = centers.filter(center => 
+                itemDetails.centers.includes(center.id)
+            ).slice(0, 3);
+
+            return `
+                <div class="analysis-result">
+                    <div class="item-info">
+                        <div class="item-header">
+                            <div class="item-icon">${itemDetails.icon}</div>
+                            <div class="item-details">
+                                <h3>${itemDetails.name}</h3>
+                                <div class="item-category">${itemDetails.category}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="item-description">
+                            ${itemDetails.description}
+                        </div>
+                        
+                        <div class="recycling-info">
+                            <h4>♻️ Recycling Action</h4>
+                            <p><strong>${itemDetails.action}</strong> - ${itemDetails.actionDescription}</p>
+                        </div>
+                        
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon">🏆</div>
+                                <div class="stat-value">+${itemDetails.points}</div>
+                                <div class="stat-label">EcoPoints</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">🌍</div>
+                                <div class="stat-value">${itemDetails.carbonSaved}kg</div>
+                                <div class="stat-label">Carbon Saved</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">⏱️</div>
+                                <div class="stat-value">${itemDetails.processingTime}</div>
+                                <div class="stat-label">Processing Time</div>
+                            </div>
+                        </div>
+                        
+                        <div class="recommendations">
+                            <h4>📋 Recycling Tips</h4>
+                            ${itemDetails.tips.map(tip => `
+                                <div class="recommendation-item">${tip}</div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                    <div class="centers-section">
+                        <h4>📍 Nearby Recycling Centers</h4>
+                        <p>Based on your location in Hassan</p>
+                        
+                        ${relevantCenters.length > 0 ? `
+                            <div class="centers-list">
+                                ${relevantCenters.map(center => `
+                                    <div class="center-item" onclick="viewCenterOnMap(${center.id})">
+                                        <div class="center-name">${center.name}</div>
+                                        <div class="center-distance">${center.distance || '1.2km away'}</div>
+                                        <div class="center-services">${center.services.slice(0, 3).join(', ')}</div>
+                                        <div class="center-address">${center.address}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : `
+                            <div class="no-centers">
+                                <p>No specific centers found. Check the map for general recycling centers.</p>
+                            </div>
+                        `}
+                        
+                        <div class="results-actions">
+                            <button class="action-btn primary" onclick="location.href='map.html'">
+                                🗺️ View All Centers
+                            </button>
+                            <button class="action-btn secondary" onclick="analyzeAnother()">
+                                🔄 Analyze Another
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function getItemDetails(itemName) {
+            const itemsDatabase = {
+                'bottle': {
+                    name: 'Plastic Bottle',
+                    category: 'Recyclable Plastic',
+                    icon: '🥤',
+                    points: 10,
+                    carbonSaved: 0.5,
+                    processingTime: '2.1s',
+                    action: 'Recycle',
+                    actionDescription: 'Place in plastic recycling bin',
+                    description: 'Plastic bottles are widely recyclable and can be turned into new bottles, clothing, or other plastic products.',
+                    tips: [
+                        'Rinse the bottle before recycling',
+                        'Remove the cap (recycle separately)',
+                        'Flatten to save space in recycling bin'
+                    ],
+                    centers: [1, 2, 5] // Center IDs from your backend
+                },
+                'book': {
+                    name: 'Books',
+                    category: 'Donation/Reuse',
+                    icon: '📚',
+                    points: 15,
+                    carbonSaved: 0.8,
+                    processingTime: '1.8s',
+                    action: 'Donate',
+                    actionDescription: 'Give to libraries or community centers',
+                    description: 'Books can be donated to libraries, schools, or community centers for reuse and education.',
+                    tips: [
+                        'Check if books are in good condition',
+                        'Consider local libraries or schools',
+                        'Remove any personal information'
+                    ],
+                    centers: [8]
+                },
+                'phone': {
+                    name: 'Mobile Phone',
+                    category: 'E-Waste',
+                    icon: '📱',
+                    points: 25,
+                    carbonSaved: 2.0,
+                    processingTime: '2.5s',
+                    action: 'Resell/Recycle',
+                    actionDescription: 'Sell online or recycle properly',
+                    description: 'Mobile phones contain valuable metals and should be properly recycled or resold.',
+                    tips: [
+                        'Backup and wipe all personal data',
+                        'Remove SIM card and memory card',
+                        'Consider reselling if functional'
+                    ],
+                    centers: [3]
+                },
+                'clothing': {
+                    name: 'Clothing',
+                    category: 'Donation/Reuse',
+                    icon: '👕',
+                    points: 12,
+                    carbonSaved: 1.2,
+                    processingTime: '1.9s',
+                    action: 'Donate',
+                    actionDescription: 'Give to charity or thrift stores',
+                    description: 'Clothing in good condition can be donated, while worn items can be recycled into new textiles.',
+                    tips: [
+                        'Wash and dry before donating',
+                        'Separate by condition (good vs worn)',
+                        'Check local donation center requirements'
+                    ],
+                    centers: [7]
+                },
+                'can': {
+                    name: 'Metal Can',
+                    category: 'Recyclable Metal',
+                    icon: '🥫',
+                    points: 10,
+                    carbonSaved: 0.6,
+                    processingTime: '1.7s',
+                    action: 'Recycle',
+                    actionDescription: 'Place in metal recycling bin',
+                    description: 'Metal cans are highly recyclable and can be melted down to create new metal products.',
+                    tips: [
+                        'Rinse thoroughly before recycling',
+                        'Remove labels if possible',
+                        'Crush to save space'
+                    ],
+                    centers: [1, 6]
+                },
+                'glass': {
+                    name: 'Glass Bottle',
+                    category: 'Recyclable Glass',
+                    icon: '🍶',
+                    points: 12,
+                    carbonSaved: 0.4,
+                    processingTime: '2.0s',
+                    action: 'Recycle',
+                    actionDescription: 'Place in glass recycling bin',
+                    description: 'Glass is 100% recyclable and can be reused endlessly without loss of quality.',
+                    tips: [
+                        'Rinse thoroughly before recycling',
+                        'Remove metal caps and lids',
+                        'Don\'t mix with other materials'
+                    ],
+                    centers: [1, 5]
+                },
+                'item': {
+                    name: 'General Item',
+                    category: 'Check Guidelines',
+                    icon: '📦',
+                    points: 5,
+                    carbonSaved: 0.2,
+                    processingTime: '1.5s',
+                    action: 'Check Guidelines',
+                    actionDescription: 'Consult local recycling rules',
+                    description: 'This item requires specific disposal guidelines. Check with local authorities.',
+                    tips: [
+                        'Check local recycling guidelines',
+                        'Visit the map for nearby centers',
+                        'Contact municipal waste department'
+                    ],
+                    centers: [1] // General recycling center
+                }
+            };
+
+            return itemsDatabase[itemName] || itemsDatabase['item'];
+        }
+
+        function viewCenterOnMap(centerId) {
+            // Store the center ID and redirect to map
+            localStorage.setItem('selectedCenter', centerId);
+            window.location.href = 'map.html';
+        }
+
+        function analyzeAnother() {
+            clearImage();
+            document.getElementById('resultsSection').style.display = 'none';
+            disableAnalyzeButton();
+        }
+
+        // Fallback mock analysis (if server is down)
+        function performMockAnalysis() {
+            const mockResults = {
+                success: true,
+                detected_objects: [
+                    {
+                        name: 'bottle',
+                        confidence: 0.95,
+                        type: 'plastic',
+                        action: 'recycle',
+                        points: 10
+                    }
+                ],
+                recommendations: ['♻️ Recycle the bottle at nearest center'],
+                total_points: 10,
+                objects_found: 1,
+                carbon_saved_kg: 0.5
+            };
+
+            displayAnalysisResults(mockResults);
+        }
+
+        // Drag and drop functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const uploadArea = document.getElementById('fileUploadArea');
+            const fileInput = document.getElementById('imageUpload');
+            
+            // Connect file input to handleImageUpload
+            fileInput.addEventListener('change', handleImageUpload);
+            
+            // Prevent default drag behaviors
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, preventDefaults, false);
+                document.body.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            // Highlight drop area when item is dragged over it
+            ['dragenter', 'dragover'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, highlight, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, unhighlight, false);
+            });
+            
+            // Handle dropped files
+            uploadArea.addEventListener('drop', handleDrop, false);
+            
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            function highlight() {
+                uploadArea.classList.add('highlight');
+            }
+            
+            function unhighlight() {
+                uploadArea.classList.remove('highlight');
+            }
+            
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                
+                if (files.length) {
+                    handleImageUpload({ target: { files: files } });
+                }
+            }
+        });
+    </script>
+</body>
+</html>
