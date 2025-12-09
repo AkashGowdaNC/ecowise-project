@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -93,8 +94,15 @@
         }
 
         @keyframes float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(180deg); }
+
+            0%,
+            100% {
+                transform: translateY(0px) rotate(0deg);
+            }
+
+            50% {
+                transform: translateY(-20px) rotate(180deg);
+            }
         }
 
         /* Navigation */
@@ -201,7 +209,7 @@
 
         .option-header {
             padding: 1.5rem;
-            background: rgba(255,255,255,0.05);
+            background: rgba(255, 255, 255, 0.05);
             display: flex;
             align-items: center;
             gap: 1rem;
@@ -290,7 +298,7 @@
             max-width: 300px;
             max-height: 200px;
             border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
         .clear-btn {
@@ -361,8 +369,13 @@
         }
 
         @keyframes scan {
-            0% { top: 0; }
-            100% { top: 100%; }
+            0% {
+                top: 0;
+            }
+
+            100% {
+                top: 100%;
+            }
         }
 
         .camera-controls {
@@ -371,7 +384,8 @@
             justify-content: center;
         }
 
-        .capture-btn, .cancel-btn {
+        .capture-btn,
+        .cancel-btn {
             padding: 12px 25px;
             border: none;
             border-radius: 25px;
@@ -438,6 +452,7 @@
                 opacity: 0;
                 transform: translateY(30px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -671,12 +686,27 @@
             animation: analyzing 1.4s infinite ease-in-out;
         }
 
-        .analyzing-dot:nth-child(1) { animation-delay: -0.32s; }
-        .analyzing-dot:nth-child(2) { animation-delay: -0.16s; }
+        .analyzing-dot:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+
+        .analyzing-dot:nth-child(2) {
+            animation-delay: -0.16s;
+        }
 
         @keyframes analyzing {
-            0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
-            40% { transform: scale(1.2); opacity: 1; }
+
+            0%,
+            80%,
+            100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+
+            40% {
+                transform: scale(1.2);
+                opacity: 1;
+            }
         }
 
         .no-results {
@@ -697,6 +727,7 @@
         }
     </style>
 </head>
+
 <body>
     <!-- Animated Background -->
     <div class="animated-bg">
@@ -861,19 +892,19 @@
 
         function showImagePreview(file) {
             const reader = new FileReader();
-            
-            reader.onload = function(e) {
+
+            reader.onload = function (e) {
                 const previewArea = document.getElementById('imagePreview');
                 const previewImage = document.getElementById('previewImage');
                 const uploadLabel = document.querySelector('.upload-label');
-                
+
                 previewImage.src = e.target.result;
                 previewArea.style.display = 'block';
                 uploadLabel.style.display = 'none';
-                
+
                 document.getElementById('analyzeHint').textContent = 'Ready to analyze! Click the Analyze button.';
             };
-            
+
             reader.readAsDataURL(file);
         }
 
@@ -881,12 +912,12 @@
             const fileInput = document.getElementById('imageUpload');
             const previewArea = document.getElementById('imagePreview');
             const uploadLabel = document.querySelector('.upload-label');
-            
+
             fileInput.value = '';
             previewArea.style.display = 'none';
             uploadLabel.style.display = 'block';
             currentImageFile = null;
-            
+
             disableAnalyzeButton();
             document.getElementById('analyzeHint').textContent = 'Select an image first to enable analysis';
         }
@@ -903,26 +934,26 @@
         async function startCamera() {
             try {
                 console.log("📷 Starting camera...");
-                
+
                 const constraints = {
-                    video: { 
+                    video: {
                         facingMode: 'environment',
                         width: { ideal: 640 },
                         height: { ideal: 480 }
                     }
                 };
-                
+
                 cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
                 const video = document.getElementById('cameraVideo');
                 const preview = document.getElementById('cameraPreview');
                 const placeholder = document.querySelector('.camera-placeholder');
-                
+
                 video.srcObject = cameraStream;
                 placeholder.style.display = 'none';
                 preview.style.display = 'block';
-                
+
                 console.log("✅ Camera started successfully");
-                
+
             } catch (error) {
                 console.error("❌ Camera error:", error);
                 alert('Camera access denied or not available. Please allow camera permissions.');
@@ -934,11 +965,11 @@
                 cameraStream.getTracks().forEach(track => track.stop());
                 cameraStream = null;
             }
-            
+
             const preview = document.getElementById('cameraPreview');
             const placeholder = document.querySelector('.camera-placeholder');
             const video = document.getElementById('cameraVideo');
-            
+
             video.srcObject = null;
             preview.style.display = 'none';
             placeholder.style.display = 'block';
@@ -953,32 +984,32 @@
             const video = document.getElementById('cameraVideo');
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
-            
+
             // Set canvas size to match video
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
-            
+
             // Draw current video frame to canvas
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
-            
+
             // Convert canvas to blob and create file
-            canvas.toBlob(function(blob) {
+            canvas.toBlob(function (blob) {
                 const timestamp = new Date().getTime();
                 const filename = `camera_capture_${timestamp}.jpg`;
-                
+
                 currentImageFile = new File([blob], filename, {
                     type: 'image/jpeg'
                 });
-                
+
                 // Enable analyze button and show preview
                 enableAnalyzeButton();
                 showImagePreview(currentImageFile);
-                
+
                 // Stop camera after capture
                 stopCamera();
-                
+
                 console.log("✅ Image captured:", filename);
-                
+
             }, 'image/jpeg', 0.8);
         }
 
@@ -1031,7 +1062,7 @@
                 }
 
                 const result = await response.json();
-                
+
                 if (result.success) {
                     displayAnalysisResults(result);
                 } else {
@@ -1040,7 +1071,7 @@
 
             } catch (error) {
                 console.error('Analysis error:', error);
-                
+
                 // Fallback to mock analysis if server is down
                 performMockAnalysis();
             } finally {
@@ -1088,12 +1119,25 @@
             }
         }
 
+        // NEW: Create Analysis HTML with proper object detection
         function createAnalysisHTML(result, centers) {
-            const detectedItem = result.detected_objects[0]; // Get first detected item
-            
+            // Log what was detected for debugging
+            console.log('🔍 Detected objects:', result.detected_objects);
+
+            // Get the highest confidence detection
+            const detectedItem = result.detected_objects.reduce((prev, current) =>
+                (prev.confidence > current.confidence) ? prev : current
+            );
+
+            console.log('📌 Using detection:', detectedItem);
+
+            // Normalize YOLO class name to database key
+            const normalizedName = normalizeObjectName(detectedItem.name);
+            console.log('🔑 Normalized name:', normalizedName);
+
             // Get item details based on detection
-            const itemDetails = getItemDetails(detectedItem.name);
-            const relevantCenters = centers.filter(center => 
+            const itemDetails = getItemDetails(normalizedName);
+            const relevantCenters = centers.filter(center =>
                 itemDetails.centers.includes(center.id)
             ).slice(0, 3);
 
@@ -1175,6 +1219,51 @@
                     </div>
                 </div>
             `;
+        }
+
+        // NEW: Normalize YOLO object names to database keys
+        function normalizeObjectName(yoloName) {
+            const nameMapping = {
+                'cell phone': 'phone',
+                'wine glass': 'glass',
+                'cup': 'cup',
+                'dining table': 'furniture',
+                'potted plant': 'potted plant',
+                'teddy bear': 'furniture',
+                'hair drier': 'electronics',
+                'toothbrush': 'item',
+                'remote': 'electronics',
+                'keyboard': 'keyboard',
+                'mouse': 'mouse',
+                'laptop': 'laptop',
+                'tv': 'tv',
+                'microwave': 'microwave',
+                'oven': 'microwave',
+                'toaster': 'microwave',
+                'sink': 'item',
+                'refrigerator': 'microwave',
+                'book': 'book',
+                'clock': 'item',
+                'vase': 'item',
+                'scissors': 'item',
+                'backpack': 'item',
+                'handbag': 'item',
+                'suitcase': 'item',
+                'frisbee': 'item',
+                'sports ball': 'item',
+                'baseball bat': 'item',
+                'baseball glove': 'item',
+                'skateboard': 'item',
+                'surfboard': 'item',
+                'tennis racket': 'item',
+                'bottle': 'bottle',
+                'chair': 'chair',
+                'couch': 'couch',
+                'bed': 'furniture',
+                'toilet': 'item'
+            };
+
+            return nameMapping[yoloName.toLowerCase()] || 'item';
         }
 
         function getItemDetails(itemName) {
@@ -1338,48 +1427,48 @@
         }
 
         // Drag and drop functionality
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const uploadArea = document.getElementById('fileUploadArea');
             const fileInput = document.getElementById('imageUpload');
-            
+
             // Connect file input to handleImageUpload
             fileInput.addEventListener('change', handleImageUpload);
-            
+
             // Prevent default drag behaviors
             ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
                 uploadArea.addEventListener(eventName, preventDefaults, false);
                 document.body.addEventListener(eventName, preventDefaults, false);
             });
-            
+
             // Highlight drop area when item is dragged over it
             ['dragenter', 'dragover'].forEach(eventName => {
                 uploadArea.addEventListener(eventName, highlight, false);
             });
-            
+
             ['dragleave', 'drop'].forEach(eventName => {
                 uploadArea.addEventListener(eventName, unhighlight, false);
             });
-            
+
             // Handle dropped files
             uploadArea.addEventListener('drop', handleDrop, false);
-            
+
             function preventDefaults(e) {
                 e.preventDefault();
                 e.stopPropagation();
             }
-            
+
             function highlight() {
                 uploadArea.classList.add('highlight');
             }
-            
+
             function unhighlight() {
                 uploadArea.classList.remove('highlight');
             }
-            
+
             function handleDrop(e) {
                 const dt = e.dataTransfer;
                 const files = dt.files;
-                
+
                 if (files.length) {
                     handleImageUpload({ target: { files: files } });
                 }
@@ -1387,4 +1476,5 @@
         });
     </script>
 </body>
+
 </html>

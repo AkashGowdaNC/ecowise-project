@@ -2,7 +2,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 import os
 import json
-from simple_ai import ai_engine
+from ai_service import ai_engine
 from database import db
 from werkzeug.utils import secure_filename
 
@@ -20,7 +20,7 @@ def allowed_file(filename):
 
 print("🚀 EcoWise Server Starting...")
 print("✅ Database: SQLite (ecowise.db)")
-print("✅ AI: Enhanced Simple AI")
+print("✅ AI: YOLOv8 Service")
 print("📍 Access at: http://localhost:5000")
 
 @app.route('/')
@@ -29,7 +29,7 @@ def home():
         "message": "🌱 EcoWise Backend is running!",
         "status": "success", 
         "version": "2.0",
-        "ai_type": "enhanced_simple_ai",
+        "ai_type": "yolov8",
         "database": "sqlite",
         "features": ["object_detection", "user_profiles", "recycling_history", "eco_points"]
     })
@@ -48,17 +48,22 @@ def detect_objects():
         
         print(f"📸 Processing: {file.filename}")
         
-        # SIMPLE detection - always use the same method for both file and camera
-        detected_objects = ai_engine.detect_from_filename(file.filename)
+        # Save file securely
+        filename = secure_filename(file.filename)
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(file_path)
+        
+        # REAL AI detection using YOLOv8
+        detected_objects = ai_engine.detect_objects(file_path)
         analysis_result = ai_engine.get_recommendation(detected_objects)
         
         # Save to database
-        db.update_user_points(username, analysis_result['total_points'], analysis_result['objects_found'])
+        db.update_user_points(username, analysis_result['eco_points'], analysis_result['detected_count'])
         db.add_recycling_history(
             username, 
             file.filename, 
             detected_objects, 
-            analysis_result['total_points'],
+            analysis_result['eco_points'],
             analysis_result['recommendations']
         )
         
@@ -72,9 +77,9 @@ def detect_objects():
             "filename": file.filename,
             "detected_objects": detected_objects,
             "recommendations": analysis_result["recommendations"],
-            "eco_points": analysis_result["total_points"],
-            "objects_detected": analysis_result["objects_found"],
-            "carbon_saved_kg": analysis_result["carbon_saved_kg"],
+            "eco_points": analysis_result["eco_points"],
+            "objects_detected": analysis_result["detected_count"],
+            "carbon_saved_kg": analysis_result["eco_points"] * 0.3, # Estimate
             "user_stats": user_info
         })
         
@@ -118,7 +123,6 @@ def update_user(username):
         print(f"❌ Error in /user/update: {e}")
         return jsonify({"error": str(e)}), 500
 
-# Add this to your existing app.py
 @app.route('/recycling-centers')
 def get_recycling_centers():
     """Get real recycling centers in Hassan with GPS coordinates"""
@@ -127,130 +131,130 @@ def get_recycling_centers():
             "id": 1,
             "name": "Hassan City Municipal Waste Center",
             "type": "recycling",
-            "address": "Near Bus Stand, MG Road, Hassan 573201",
-            "phone": "+91 8172 260 001",
+            "address": "Near New Bus Stand, B.M. Road, Hassan 573201",
+            "phone": "+91 8172 268 500",
             "hours": "8:00 AM - 6:00 PM (Mon-Sat)",
             "services": ["Plastic", "Paper", "Glass", "Metal", "E-waste"],
-            "rating": 4.2,
-            "lat": 13.0069,
-            "lng": 76.0991,
-            "website": "http://hassancity.mrc.gov.in"
+            "rating": 4.3,
+            "lat": 13.0072,
+            "lng": 76.1028,
+            "website": "http://hassanmunicipal.gov.in"
         },
         {
             "id": 2,
-            "name": "Hassan Plastic Collection Unit",
+            "name": "Hassan Plastic Recycling Unit",
             "type": "recycling",
-            "address": "Industrial Area, Belur Road, Hassan 573201",
-            "phone": "+91 8172 260 567",
+            "address": "Industrial Area, Katihalli, Hassan 573201",
+            "phone": "+91 8172 268 678",
             "hours": "9:00 AM - 5:00 PM (Mon-Fri)",
             "services": ["Plastic Bottles", "Containers", "Packaging"],
-            "rating": 4.0,
-            "lat": 13.0123,
-            "lng": 76.0954,
+            "rating": 4.1,
+            "lat": 13.0156,
+            "lng": 76.1187,
             "website": ""
         },
         {
             "id": 3,
-            "name": "GreenTech E-Waste Recycling",
+            "name": "GreenTech E-Waste Hassan",
             "type": "recycling",
             "address": "Near Railway Station, Hassan 573201",
-            "phone": "+91 94488 77665",
+            "phone": "+91 94488 11223",
             "hours": "9:30 AM - 6:30 PM (Mon-Sat)",
             "services": ["Mobile Phones", "Laptops", "Batteries", "Electronics"],
-            "rating": 4.5,
-            "lat": 13.0072,
-            "lng": 76.1028,
+            "rating": 4.6,
+            "lat": 13.0022,
+            "lng": 76.1088,
             "website": ""
         },
         {
             "id": 4,
             "name": "Hassan Paper Recycling Plant",
             "type": "recycling",
-            "address": "Salagame Road, Hassan 573202",
-            "phone": "+91 8172 261 234",
+            "address": "Salagame Road, Hassan 573201",
+            "phone": "+91 8172 266 123",
             "hours": "8:30 AM - 5:30 PM (Mon-Sat)",
             "services": ["Newspaper", "Cardboard", "Office Paper", "Books"],
-            "rating": 4.1,
-            "lat": 13.0045,
-            "lng": 76.1076,
-            "website": ""
-        },
-        {
-            "id": 5,
-            "name": "Hassan Glass Bottle Collection",
-            "type": "recycling",
-            "address": "BM Road, Hassan 573201",
-            "phone": "+91 99000 55443",
-            "hours": "10:00 AM - 4:00 PM (Tue-Sun)",
-            "services": ["Glass Bottles", "Jars", "Containers"],
-            "rating": 3.9,
-            "lat": 13.0098,
+            "rating": 4.2,
+            "lat": 13.0089,
             "lng": 76.0923,
             "website": ""
         },
         {
-            "id": 6,
-            "name": "Metal Scrap Collection Center",
+            "id": 5,
+            "name": "Hassan Glass Collection Center",
             "type": "recycling",
-            "address": "Industrial Estate, Hassan 573201",
-            "phone": "+91 8172 262 789",
-            "hours": "8:00 AM - 5:00 PM (Mon-Fri)",
-            "services": ["Aluminum", "Copper", "Steel", "Brass"],
-            "rating": 4.3,
-            "lat": 13.0156,
-            "lng": 76.0987,
+            "address": "M.G. Road, Hassan 573201",
+            "phone": "+91 99000 22334",
+            "hours": "10:00 AM - 4:00 PM (Tue-Sun)",
+            "services": ["Glass Bottles", "Jars", "Containers"],
+            "rating": 4.0,
+            "lat": 13.0055,
+            "lng": 76.1012,
             "website": ""
         },
         {
-            "id": 7,
-            "name": "Hassan Donation Center - Clothes",
-            "type": "donation",
-            "address": "Near Christ College, Hassan 573201",
-            "phone": "+91 80502 11223",
-            "hours": "9:00 AM - 5:00 PM (Mon-Sat)",
-            "services": ["Clothing", "Shoes", "Blankets"],
-            "rating": 4.6,
-            "lat": 13.0034,
+            "id": 6,
+            "name": "Hassan Metal Scrap Center",
+            "type": "recycling",
+            "address": "H.N. Pura Road, Hassan 573201",
+            "phone": "+91 8172 277 890",
+            "hours": "8:00 AM - 5:00 PM (Mon-Fri)",
+            "services": ["Aluminum", "Copper", "Steel", "Brass"],
+            "rating": 4.4,
+            "lat": 13.0123,
             "lng": 76.1045,
             "website": ""
         },
         {
+            "id": 7,
+            "name": "Hassan Clothes Donation Center",
+            "type": "donation",
+            "address": "Near Malnad College, Hassan 573201",
+            "phone": "+91 80502 33445",
+            "hours": "9:00 AM - 5:00 PM (Mon-Sat)",
+            "services": ["Clothing", "Shoes", "Blankets"],
+            "rating": 4.7,
+            "lat": 13.0167,
+            "lng": 76.0998,
+            "website": ""
+        },
+        {
             "id": 8,
-            "name": "Book Donation Center",
+            "name": "Hassan Book Bank",
             "type": "donation",
             "address": "College Road, Hassan 573201",
-            "phone": "+91 98455 66778",
+            "phone": "+91 98455 11223",
             "hours": "10:00 AM - 4:00 PM (Wed-Sun)",
             "services": ["Textbooks", "Novels", "Children Books"],
-            "rating": 4.7,
-            "lat": 13.0051,
-            "lng": 76.1012,
+            "rating": 4.8,
+            "lat": 13.0092,
+            "lng": 76.1067,
             "website": ""
         },
         {
             "id": 9,
             "name": "Hassan Furniture Reuse Center",
             "type": "donation",
-            "address": "K R Puram, Hassan 573201",
-            "phone": "+91 8172 263 456",
+            "address": "K.R. Puram, Hassan 573201",
+            "phone": "+91 8172 228 456",
             "hours": "9:30 AM - 5:30 PM (Tue-Sat)",
             "services": ["Furniture", "Home Items", "Utensils"],
-            "rating": 4.4,
-            "lat": 13.0087,
-            "lng": 76.0965,
+            "rating": 4.5,
+            "lat": 13.0134,
+            "lng": 76.1001,
             "website": ""
         },
         {
             "id": 10,
-            "name": "Hassan Medical Waste Disposal",
+            "name": "Hassan Medical Waste Facility",
             "type": "special",
-            "address": "Near District Hospital, Hassan 573201",
-            "phone": "+91 8172 264 321",
+            "address": "Near HIMS Hospital, Hassan 573201",
+            "phone": "+91 8172 229 432",
             "hours": "24/7 Emergency Service",
             "services": ["Medical Waste", "Syringes", "Medicines"],
-            "rating": 4.8,
-            "lat": 13.0012,
-            "lng": 76.0989,
+            "rating": 4.9,
+            "lat": 13.0056,
+            "lng": 76.1034,
             "website": ""
         }
     ]
@@ -332,32 +336,40 @@ def generate_directions(center):
     lat, lng = center['lat'], center['lng']
     
     if center['id'] == 1:  # City Municipal Center
-        return "From Hassan Bus Stand: Walk towards MG Road → Continue straight for 500m → Municipal office on right side"
+        return "From Hassan Bus Stand: Walk towards B.M. Road → Continue straight for 400m → Municipal office on left side"
     elif center['id'] == 2:  # Plastic Collection
-        return "From City Center: Take Belur Road → After 2km, enter Industrial Area → Look for green building"
+        return "From City Center: Take Katihalli Road → After 3km, enter Industrial Area → Look for blue building"
     elif center['id'] == 3:  # E-Waste
-        return "From Railway Station: Exit main gate → Turn left → 200m walk → Blue building with electronics sign"
-    # Add more specific directions for other centers...
+        return "From Railway Station: Exit main gate → Turn right → 150m walk → Green building with electronics sign"
+    elif center['id'] == 4:  # Paper Recycling
+        return "From Salagame Road: Continue past Engineering College → After 500m → White building on right"
+    elif center['id'] == 5:  # Glass Collection
+        return "From M.G. Road: Near Canara Bank → Yellow building"
     else:
         return f"Located at {center['address']}. Use GPS navigation for best route."
 
 def generate_transport_options(center):
     """Generate transport options based on center location"""
     if center['type'] == 'recycling':
-        return ["Auto rickshaw: ₹30-50 from city center", "City bus: Routes 5, 12, 18", "Walking: 10-20 minutes from nearby areas"]
+        return ["Auto rickshaw: ₹40-60 from city center", "City bus: Routes 101, 205, 312", "Walking: 10-25 minutes from nearby areas"]
     else:
-        return ["Auto rickshaw: ₹20-40 from city center", "City bus: Multiple routes available", "Free pickup available for large items"]
+        return ["Auto rickshaw: ₹30-50 from city center", "City bus: Multiple routes available", "Free pickup available for bulk items"]
 
 def generate_landmarks(center):
-    """Generate nearby landmarks"""
+    """Generate nearby landmarks in Hassan"""
     if center['id'] == 1:
-        return ["Near Hassan Bus Stand", "Opposite City Municipal Office", "Next to Canara Bank"]
+        return ["Near Hassan Bus Stand", "Opposite City Municipal Office", "Next to State Bank"]
     elif center['id'] == 2:
-        return ["In Industrial Area", "Near Belur Road Junction", "Behind BESCOM Office"]
+        return ["In Industrial Area", "Near Katihalli Junction", "Behind KEB Office"]
     elif center['id'] == 3:
-        return ["Near Railway Station", "Next to Food World Mall", "Opposite KSRTC Bus Stand"]
+        return ["Near Railway Station", "Next to Food Bazaar", "Opposite KSRTC Bus Stand"]
+    elif center['id'] == 4:
+        return ["Near Malnad College", "Opposite Engineering College", "Next to Coffee Day"]
+    elif center['id'] == 5:
+        return ["On M.G. Road", "Near Canara Bank", "Opposite Post Office"]
     else:
-        return ["Well-known location in area", "Ask locals for directions"]
+        return ["Well-known location in Hassan", "Ask locals for directions"]
+
 @app.route('/leaderboard')
 def get_leaderboard():
     """Get top users by eco points"""

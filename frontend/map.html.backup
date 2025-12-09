@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🗺️ Recycling Centers - EcoWise</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        :root {
+            --primary: #10B981;
+            --primary-dark: #059669;
+            --secondary: #3B82F6;
+            --accent: #F59E0B;
+            --background: #0F172A;
+            --surface: #1E293B;
+            --text: #F8FAFC;
+            --text-secondary: #94A3B8;
+            --gradient: linear-gradient(135deg, #10B981, #3B82F6, #8B5CF6);
+            --glass: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        /* Navigation */
+        .glass-nav {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-link {
+            color: var(--text);
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Map Layout */
+        .map-container {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            height: calc(100vh - 80px);
+            gap: 0;
+        }
+
+        .sidebar {
+            background: var(--surface);
+            border-right: 1px solid var(--glass-border);
+            overflow-y: auto;
+            padding: 1.5rem;
+        }
+
+        .map-view {
+            position: relative;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Center Cards */
+        .center-card {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .center-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .center-card.active {
+            border-color: var(--primary);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .center-header {
+            display: flex;
+            justify-content: between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .center-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .center-type {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+
+            .center-distance {
+                color: var(--primary);
+                font-weight: 600;
+                font-size: 0.9rem;
+            }
+
+            .center-services {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                margin: 0.75rem 0;
+            }
+
+            .service-tag {
+                background: rgba(255, 255, 255, 0.1);
+                padding: 0.25rem 0.5rem;
+                border-radius: 12px;
+                font-size: 0.8rem;
+            }
+
+            .center-info {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-top: 1rem;
+                font-size: 0.9rem;
+                color: var(--text-secondary);
+            }
+
+            /* Search and Filters */
+            .search-section {
+                margin-bottom: 1.5rem;
+            }
+
+            .search-box {
+                position: relative;
+                margin-bottom: 1rem;
+            }
+
+            .search-input {
+                width: 100%;
+                padding: 0.75rem 1rem 0.75rem 2.5rem;
+                border-radius: 25px;
+                border: 1px solid var(--glass-border);
+                background: var(--glass);
+                color: var(--text);
+                font-size: 0.9rem;
+            }
+
+            .search-icon {
+                position: absolute;
+                left: 1rem;
+                top: 50%;
+                transform: translateY(-50%);
+                color: var(--text-secondary);
+            }
+
+            .filter-buttons {
+                display: flex;
+                gap: 0.5rem;
+                flex-wrap: wrap;
+            }
+
+            .filter-btn {
+                padding: 0.5rem 1rem;
+                border: 1px solid var(--glass-border);
+                background: var(--glass);
+                color: var(--text);
+                border-radius: 20px;
+                cursor: pointer;
+                font-size: 0.8rem;
+                transition: all 0.3s ease;
+            }
+
+            .filter-btn.active {
+                background: var(--primary);
+                border-color: var(--primary);
+                color: white;
+            }
+
+            /* Location Button */
+            .location-btn {
+                background: var(--gradient);
+                color: white;
+                border: none;
+                padding: 1rem 1.5rem;
+                border-radius: 25px;
+                cursor: pointer;
+                font-weight: 600;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                margin-bottom: 1rem;
+                width: 100%;
+                justify-content: center;
+                transition: all 0.3s ease;
+            }
+
+            .location-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+            }
+
+            /* Responsive */
+            @media (max-width: 968px) {
+                .map-container {
+                    grid-template-columns: 1fr;
+                    grid-template-rows: 400px 1fr;
+                }
+
+                .sidebar {
+                    border-right: none;
+                    border-top: 1px solid var(--glass-border);
+                }
+            }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="glass-nav">
+        <div class="container">
+            <div class="nav-container">
+                <div class="nav-logo">
+                    <div class="logo-icon">🌱</div>
+                    <span class="logo-text">EcoWise</span>
+                </div>
+                <div class="nav-links">
+                    <a href="home.html" class="nav-link">🏠 Home</a>
+                    <a href="analyze.html" class="nav-link">📸 Analyze</a>
+                    <a href="map.html" class="nav-link active">🗺️ Map</a>
+                    <a href="profile.html" class="nav-link">👤 Profile</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Map Section -->
+    <div class="container">
+        <div class="map-container">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <div class="search-section">
+                    <h2>🗺️ Recycling Centers in Hassan</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                        Find nearby recycling and donation centers
+                    </p>
+
+                    <button class="location-btn" onclick="getUserLocation()">
+                        <i class="fas fa-location-crosshairs"></i>
+                        Use My Current Location
+                    </button>
+
+                    <div class="search-box">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" class="search-input" placeholder="Search centers..." id="searchInput">
+                    </div>
+
+                    <div class="filter-buttons">
+                        <button class="filter-btn active" onclick="filterCenters('all')">All</button>
+                        <button class="filter-btn" onclick="filterCenters('recycling')">Recycling</button>
+                        <button class="filter-btn" onclick="filterCenters('donation')">Donation</button>
+                        <button class="filter-btn" onclick="filterCenters('special')">Special</button>
+                    </div>
+                </div>
+
+                <div class="centers-list" id="centersList">
+                    <!-- Centers will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Map -->
+            <div class="map-view">
+                <div id="map"></div>
+                <div class="map-controls">
+                    <button class="control-btn" onclick="zoomIn()">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                    <button class="control-btn" onclick="zoomOut()">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <button class="control-btn" onclick="resetView()">
+                        <i class="fas fa-crosshairs"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Global variables
+        let map;
+        let userLocation = null;
+        let userMarker = null;
+        let centerMarkers = [];
+        let allCenters = [];
+        let currentFilter = 'all';
+
+        // Initialize map
+        function initMap() {
+            // Create map centered on Hassan
+            map = L.map('map').setView([13.0072, 76.1028], 13);
+
+            // Add tile layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
+
+            // Load centers from backend
+            loadCenters();
+
+            // Setup search
+            document.getElementById('searchInput').addEventListener('input', handleSearch);
+        }
+
+        // Load centers from backend
+        async function loadCenters() {
+            try {
+                const response = await fetch('http://localhost:5000/recycling-centers');
+                allCenters = await response.json();
+                displayCenters(allCenters);
+                addMarkersToMap(allCenters);
+            } catch (error) {
+                console.error('Error loading centers:', error);
+                // Use fallback data if backend is down
+                allCenters = getFallbackCenters();
+                displayCenters(allCenters);
+                addMarkersToMap(allCenters);
+            }
+        }
+
+        // Display centers in sidebar
+        function displayCenters(centers) {
+            const centersList = document.getElementById('centersList');
+            centersList.innerHTML = '';
+
+            centers.forEach(center => {
+                const card = document.createElement('div');
+                card.className = 'center-card';
+                card.onclick = () => focusCenter(center);
+
+                card.innerHTML = `
+                    <div class="center-header">
+                        <div>
+                            <div class="center-name">${center.name}</div>
+                            <span class="center-type type-${center.type}">${center.type}</span>
+                        </div>
+                    </div>
+                    <div class="center-services">
+                        ${center.services.slice(0, 3).map(s => `<span class="service-tag">${s}</span>`).join('')}
+                    </div>
+                    <div class="center-info">
+                        <span>⭐ ${center.rating || 4.5}</span>
+                        <span>${center.hours || 'Check hours'}</span>
+                    </div>
+                `;
+
+                centersList.appendChild(card);
+            });
+        }
+
+        // Add markers to map
+        function addMarkersToMap(centers) {
+            // Clear existing markers
+            centerMarkers.forEach(marker => map.removeLayer(marker));
+            centerMarkers = [];
+
+            // Add new markers
+            centers.forEach(center => {
+                const icon = L.divIcon({
+                    className: 'custom-marker',
+                    html: `<div style="background: ${getMarkerColor(center.type)}; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">${getMarkerIcon(center.type)}</div>`,
+                    iconSize: [30, 30]
+                });
+
+                const marker = L.marker([center.lat, center.lng], { icon })
+                    .addTo(map)
+                    .bindPopup(`
+                        <div style="min-width: 200px;">
+                            <h3 style="margin: 0 0 8px 0; color: #10B981;">${center.name}</h3>
+                            <p style="margin: 4px 0; font-size: 0.9em;"><strong>Type:</strong> ${center.type}</p>
+                            <p style="margin: 4px 0; font-size: 0.9em;"><strong>Services:</strong> ${center.services.slice(0, 2).join(', ')}</p>
+                            <p style="margin: 4px 0; font-size: 0.9em;"><strong>Rating:</strong> ⭐ ${center.rating || 4.5}</p>
+                            <p style="margin: 4px 0; font-size: 0.9em;"><strong>Phone:</strong> ${center.phone || 'N/A'}</p>
+                        </div>
+                    `);
+
+                centerMarkers.push(marker);
+            });
+        }
+
+        // Get marker color based on type
+        function getMarkerColor(type) {
+            switch (type) {
+                case 'recycling': return '#10B981';
+                case 'donation': return '#3B82F6';
+                case 'special': return '#F59E0B';
+                default: return '#6B7280';
+            }
+        }
+
+        // Get marker icon based on type
+        function getMarkerIcon(type) {
+            switch (type) {
+                case 'recycling': return '♻️';
+                case 'donation': return '🤝';
+                case 'special': return '⚠️';
+                default: return '📍';
+            }
+        }
+
+        // Focus on a specific center
+        function focusCenter(center) {
+            map.setView([center.lat, center.lng], 16);
+
+            // Find and open the marker popup
+            centerMarkers.forEach(marker => {
+                const pos = marker.getLatLng();
+                if (pos.lat === center.lat && pos.lng === center.lng) {
+                    marker.openPopup();
+                }
+            });
+
+            // Highlight the card
+            document.querySelectorAll('.center-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+        }
+
+        // Filter centers
+        function filterCenters(type) {
+            currentFilter = type;
+
+            // Update button states
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+
+            // Filter and display
+            const filtered = type === 'all'
+                ? allCenters
+                : allCenters.filter(c => c.type === type);
+
+            displayCenters(filtered);
+            addMarkersToMap(filtered);
+        }
+
+        // Handle search
+        function handleSearch(event) {
+            const query = event.target.value.toLowerCase();
+
+            let filtered = currentFilter === 'all'
+                ? allCenters
+                : allCenters.filter(c => c.type === currentFilter);
+
+            if (query) {
+                filtered = filtered.filter(c =>
+                    c.name.toLowerCase().includes(query) ||
+                    c.services.some(s => s.toLowerCase().includes(query)) ||
+                    c.address.toLowerCase().includes(query)
+                );
+            }
+
+            displayCenters(filtered);
+            addMarkersToMap(filtered);
+        }
+
+        // Get user location
+        function getUserLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        userLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+
+                        // Add user marker
+                        if (userMarker) {
+                            map.removeLayer(userMarker);
+                        }
+
+                        const userIcon = L.divIcon({
+                            className: 'user-marker',
+                            html: '<div style="background: #3B82F6; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>',
+                            iconSize: [20, 20]
+                        });
+
+                        userMarker = L.marker([userLocation.lat, userLocation.lng], { icon: userIcon })
+                            .addTo(map)
+                            .bindPopup('📍 Your Location');
+
+                        map.setView([userLocation.lat, userLocation.lng], 14);
+                    },
+                    error => {
+                        alert('Unable to get your location. Please enable location services.');
+                        console.error('Geolocation error:', error);
+                    }
+                );
+            } else {
+                alert('Geolocation is not supported by your browser.');
+            }
+        }
+
+        // Map controls
+        function zoomIn() {
+            map.zoomIn();
+        }
+
+        function zoomOut() {
+            map.zoomOut();
+        }
+
+        function resetView() {
+            map.setView([13.0072, 76.1028], 13);
+        }
+
+        // Fallback centers if backend is down
+        function getFallbackCenters() {
+            return [
+                {
+                    id: 1,
+                    name: "Hassan City Municipal Waste Center",
+                    type: "recycling",
+                    address: "Near New Bus Stand, B.M. Road, Hassan 573201",
+                    phone: "+91 8172 268 500",
+                    hours: "8:00 AM - 6:00 PM (Mon-Sat)",
+                    services: ["Plastic", "Paper", "Glass", "Metal", "E-waste"],
+                    rating: 4.3,
+                    lat: 13.0072,
+                    lng: 76.1028
+                },
+                {
+                    id: 2,
+                    name: "Hassan Plastic Recycling Unit",
+                    type: "recycling",
+                    address: "Industrial Area, Katihalli, Hassan 573201",
+                    services: ["Plastic Bottles", "Containers"],
+                    rating: 4.1,
+                    lat: 13.0156,
+                    lng: 76.1187
+                },
+                {
+                    id: 3,
+                    name: "GreenTech E-Waste Hassan",
+                    type: "recycling",
+                    address: "Near Railway Station, Hassan 573201",
+                    services: ["Mobile Phones", "Laptops", "Batteries"],
+                    rating: 4.6,
+                    lat: 13.0022,
+                    lng: 76.1088
+                }
+            ];
+        }
+
+        // Add missing CSS for map
+        const style = document.createElement('style');
+        style.textContent = `
+            #map {
+                width: 100%;
+                height: 100%;
+                border-radius: 0;
+            }
+            .map-controls {
+                position: absolute;
+                top: 20px;
+                right: 20px;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                z-index: 1000;
+            }
+            .control-btn {
+                background: white;
+                border: 2px solid rgba(0,0,0,0.2);
+                width: 40px;
+                height: 40px;
+                border-radius: 8px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.2rem;
+                transition: all 0.3s ease;
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initMap);
+    </script>
+</body>
+
+</html>

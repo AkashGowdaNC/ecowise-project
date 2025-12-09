@@ -26,19 +26,19 @@ function handleImageUpload(event) {
 
 function showImagePreview(file) {
     const reader = new FileReader();
-    
-    reader.onload = function(e) {
+
+    reader.onload = function (e) {
         const previewArea = document.getElementById('imagePreview');
         const previewImage = document.getElementById('previewImage');
         const uploadLabel = document.querySelector('.upload-label');
-        
+
         previewImage.src = e.target.result;
         previewArea.style.display = 'block';
         uploadLabel.style.display = 'none';
-        
+
         document.getElementById('analyzeHint').textContent = 'Ready to analyze! Click the Analyze button.';
     };
-    
+
     reader.readAsDataURL(file);
 }
 
@@ -46,12 +46,12 @@ function clearImage() {
     const fileInput = document.getElementById('imageUpload');
     const previewArea = document.getElementById('imagePreview');
     const uploadLabel = document.querySelector('.upload-label');
-    
+
     fileInput.value = '';
     previewArea.style.display = 'none';
     uploadLabel.style.display = 'block';
     currentImageFile = null;
-    
+
     disableAnalyzeButton();
     document.getElementById('analyzeHint').textContent = 'Select an image first to enable analysis';
 }
@@ -68,26 +68,26 @@ function disableAnalyzeButton() {
 async function startCamera() {
     try {
         console.log("📷 Starting camera...");
-        
+
         const constraints = {
-            video: { 
+            video: {
                 facingMode: 'environment',
                 width: { ideal: 640 },
                 height: { ideal: 480 }
             }
         };
-        
+
         cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
         const video = document.getElementById('cameraVideo');
         const preview = document.getElementById('cameraPreview');
         const placeholder = document.querySelector('.camera-placeholder');
-        
+
         video.srcObject = cameraStream;
         placeholder.style.display = 'none';
         preview.style.display = 'block';
-        
+
         console.log("✅ Camera started successfully");
-        
+
     } catch (error) {
         console.error("❌ Camera error:", error);
         alert('Camera access denied or not available. Please allow camera permissions.');
@@ -99,11 +99,11 @@ function stopCamera() {
         cameraStream.getTracks().forEach(track => track.stop());
         cameraStream = null;
     }
-    
+
     const preview = document.getElementById('cameraPreview');
     const placeholder = document.querySelector('.camera-placeholder');
     const video = document.getElementById('cameraVideo');
-    
+
     video.srcObject = null;
     preview.style.display = 'none';
     placeholder.style.display = 'block';
@@ -118,32 +118,32 @@ function captureImage() {
     const video = document.getElementById('cameraVideo');
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
-    
+
     // Set canvas size to match video
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
-    
+
     // Draw current video frame to canvas
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
+
     // Convert canvas to blob and create file
-    canvas.toBlob(function(blob) {
+    canvas.toBlob(function (blob) {
         const timestamp = new Date().getTime();
         const filename = `camera_capture_${timestamp}.jpg`;
-        
+
         currentImageFile = new File([blob], filename, {
             type: 'image/jpeg'
         });
-        
+
         // Enable analyze button and show preview
         enableAnalyzeButton();
         showImagePreview(currentImageFile);
-        
+
         // Stop camera after capture
         stopCamera();
-        
+
         console.log("✅ Image captured:", filename);
-        
+
     }, 'image/jpeg', 0.8);
 }
 
@@ -196,7 +196,7 @@ async function analyzeImage() {
         }
 
         const result = await response.json();
-        
+
         if (result.success) {
             displayAnalysisResults(result);
         } else {
@@ -205,7 +205,7 @@ async function analyzeImage() {
 
     } catch (error) {
         console.error('Analysis error:', error);
-        
+
         // Fallback to mock analysis if server is down
         performMockAnalysis();
     } finally {
@@ -253,12 +253,25 @@ async function fetchRecyclingCenters() {
     }
 }
 
+// NEW: Create Analysis HTML with proper object detection
 function createAnalysisHTML(result, centers) {
-    const detectedItem = result.detected_objects[0]; // Get first detected item
-    
+    // Log what was detected for debugging
+    console.log('🔍 Detected objects:', result.detected_objects);
+
+    // Get the highest confidence detection
+    const detectedItem = result.detected_objects.reduce((prev, current) =>
+        (prev.confidence > current.confidence) ? prev : current
+    );
+
+    console.log('📌 Using detection:', detectedItem);
+
+    // Normalize YOLO class name to database key
+    const normalizedName = normalizeObjectName(detectedItem.name);
+    console.log('🔑 Normalized name:', normalizedName);
+
     // Get item details based on detection
-    const itemDetails = getItemDetails(detectedItem.name);
-    const relevantCenters = centers.filter(center => 
+    const itemDetails = getItemDetails(normalizedName);
+    const relevantCenters = centers.filter(center =>
         itemDetails.centers.includes(center.id)
     ).slice(0, 3);
 
@@ -342,6 +355,51 @@ function createAnalysisHTML(result, centers) {
     `;
 }
 
+// NEW: Normalize YOLO object names to database keys
+function normalizeObjectName(yoloName) {
+    const nameMapping = {
+        'cell phone': 'phone',
+        'wine glass': 'glass',
+        'cup': 'cup',
+        'dining table': 'furniture',
+        'potted plant': 'potted plant',
+        'teddy bear': 'furniture',
+        'hair drier': 'electronics',
+        'toothbrush': 'item',
+        'remote': 'electronics',
+        'keyboard': 'keyboard',
+        'mouse': 'mouse',
+        'laptop': 'laptop',
+        'tv': 'tv',
+        'microwave': 'microwave',
+        'oven': 'microwave',
+        'toaster': 'microwave',
+        'sink': 'item',
+        'refrigerator': 'microwave',
+        'book': 'book',
+        'clock': 'item',
+        'vase': 'item',
+        'scissors': 'item',
+        'backpack': 'item',
+        'handbag': 'item',
+        'suitcase': 'item',
+        'frisbee': 'item',
+        'sports ball': 'item',
+        'baseball bat': 'item',
+        'baseball glove': 'item',
+        'skateboard': 'item',
+        'surfboard': 'item',
+        'tennis racket': 'item',
+        'bottle': 'bottle',
+        'chair': 'chair',
+        'couch': 'couch',
+        'bed': 'furniture',
+        'toilet': 'item'
+    };
+
+    return nameMapping[yoloName.toLowerCase()] || 'item';
+}
+
 function getItemDetails(itemName) {
     const itemsDatabase = {
         'bottle': {
@@ -359,7 +417,7 @@ function getItemDetails(itemName) {
                 'Remove the cap (recycle separately)',
                 'Flatten to save space in recycling bin'
             ],
-            centers: [1, 2, 5] // Center IDs from your backend
+            centers: [1, 2, 5]
         },
         'book': {
             name: 'Books',
@@ -395,40 +453,6 @@ function getItemDetails(itemName) {
             ],
             centers: [3]
         },
-        'clothing': {
-            name: 'Clothing',
-            category: 'Donation/Reuse',
-            icon: '👕',
-            points: 12,
-            carbonSaved: 1.2,
-            processingTime: '1.9s',
-            action: 'Donate',
-            actionDescription: 'Give to charity or thrift stores',
-            description: 'Clothing in good condition can be donated, while worn items can be recycled into new textiles.',
-            tips: [
-                'Wash and dry before donating',
-                'Separate by condition (good vs worn)',
-                'Check local donation center requirements'
-            ],
-            centers: [7]
-        },
-        'can': {
-            name: 'Metal Can',
-            category: 'Recyclable Metal',
-            icon: '🥫',
-            points: 10,
-            carbonSaved: 0.6,
-            processingTime: '1.7s',
-            action: 'Recycle',
-            actionDescription: 'Place in metal recycling bin',
-            description: 'Metal cans are highly recyclable and can be melted down to create new metal products.',
-            tips: [
-                'Rinse thoroughly before recycling',
-                'Remove labels if possible',
-                'Crush to save space'
-            ],
-            centers: [1, 6]
-        },
         'glass': {
             name: 'Glass Bottle',
             category: 'Recyclable Glass',
@@ -446,6 +470,144 @@ function getItemDetails(itemName) {
             ],
             centers: [1, 5]
         },
+        'cup': {
+            name: 'Cup/Mug',
+            category: 'Ceramic/Plastic',
+            icon: '☕',
+            points: 5,
+            carbonSaved: 0.3,
+            processingTime: '1.2s',
+            action: 'Donate/Trash',
+            actionDescription: 'Donate if good, trash if broken',
+            description: 'Ceramic mugs are not recyclable in curbside bins. Plastic cups may be recyclable.',
+            tips: ['Donate usable mugs', 'Wrap broken pieces safely', 'Check plastic number'],
+            centers: [7, 1]
+        },
+        'laptop': {
+            name: 'Laptop',
+            category: 'E-Waste',
+            icon: '💻',
+            points: 50,
+            carbonSaved: 15.0,
+            processingTime: '4.5s',
+            action: 'Resell/Recycle',
+            actionDescription: 'Resell if working, otherwise recycle',
+            description: 'Laptops contain valuable metals and hazardous materials. Never dispose in trash.',
+            tips: ['Wipe all data', 'Remove battery', 'Check trade-in value'],
+            centers: [3, 10]
+        },
+        'keyboard': {
+            name: 'Keyboard',
+            category: 'E-Waste',
+            icon: '⌨️',
+            points: 20,
+            carbonSaved: 1.2,
+            processingTime: '2.0s',
+            action: 'E-Waste Recycling',
+            actionDescription: 'Take to e-waste recycling center',
+            description: 'Keyboards contain electronic components and plastics that should be recycled properly.',
+            tips: ['Remove batteries if wireless', 'Clean before recycling', 'Check for manufacturer take-back'],
+            centers: [3, 10]
+        },
+        'mouse': {
+            name: 'Computer Mouse',
+            category: 'E-Waste',
+            icon: '🖱️',
+            points: 15,
+            carbonSaved: 0.8,
+            processingTime: '1.5s',
+            action: 'E-Waste Recycling',
+            actionDescription: 'Take to e-waste recycling center',
+            description: 'Computer mice contain electronic components and should not be thrown in regular trash.',
+            tips: ['Remove batteries if wireless', 'Wipe clean', 'Bundle cable if wired'],
+            centers: [3, 10]
+        },
+        'tv': {
+            name: 'Television',
+            category: 'E-Waste',
+            icon: '📺',
+            points: 45,
+            carbonSaved: 12.0,
+            processingTime: '5.0s',
+            action: 'E-Waste Recycling',
+            actionDescription: 'Schedule pickup or take to center',
+            description: 'TVs contain heavy metals and glass that require special recycling processes.',
+            tips: ['Do not break screen', 'Get help lifting', 'Keep cords attached'],
+            centers: [3, 10]
+        },
+        'chair': {
+            name: 'Chair',
+            category: 'Furniture',
+            icon: '🪑',
+            points: 30,
+            carbonSaved: 5.0,
+            processingTime: '3.5s',
+            action: 'Donate/Bulk Pickup',
+            actionDescription: 'Donate if usable, otherwise bulk pickup',
+            description: 'Chairs can often be reused. Broken ones may need dismantling for recycling.',
+            tips: ['Clean before donating', 'Tighten screws', 'Check for bed bugs'],
+            centers: [7, 9]
+        },
+        'couch': {
+            name: 'Couch/Sofa',
+            category: 'Furniture',
+            icon: '🛋️',
+            points: 50,
+            carbonSaved: 20.0,
+            processingTime: '5.0s',
+            action: 'Donate/Bulk Pickup',
+            actionDescription: 'Donate if usable, otherwise bulk pickup',
+            description: 'Couches are large items that require special handling. Donation is best for good condition items.',
+            tips: ['Vacuum before donating', 'Schedule pickup in advance', 'Cover during transport'],
+            centers: [7, 9]
+        },
+        'furniture': {
+            name: 'Furniture',
+            category: 'Bulky Items',
+            icon: '🛋️',
+            points: 40,
+            carbonSaved: 5.0,
+            processingTime: '4.0s',
+            action: 'Donate/Recycle',
+            actionDescription: 'Donate if usable, otherwise schedule bulk pickup',
+            description: 'Furniture in good condition can be donated, while broken items may be recycled or require special disposal.',
+            tips: [
+                'Check with local charities for pickup',
+                'Disassemble large items if possible',
+                'Schedule municipal bulk pickup'
+            ],
+            centers: [7, 9]
+        },
+        'microwave': {
+            name: 'Microwave',
+            category: 'Appliance',
+            icon: '♨️',
+            points: 35,
+            carbonSaved: 8.0,
+            processingTime: '3.0s',
+            action: 'E-Waste/Scrap',
+            actionDescription: 'Take to appliance recycler',
+            description: 'Microwaves contain electronic components and scrap metal.',
+            tips: ['Clean inside', 'Remove glass plate', 'Tape door shut'],
+            centers: [3, 6]
+        },
+        'electronics': {
+            name: 'Small Electronics',
+            category: 'E-Waste',
+            icon: '💻',
+            points: 35,
+            carbonSaved: 4.2,
+            processingTime: '3.5s',
+            action: 'E-Waste Recycling',
+            actionDescription: 'Take to e-waste recycling center',
+            description: 'Electronics contain valuable metals and hazardous materials that need proper disposal.',
+            tips: [
+                'Backup and wipe all data',
+                'Remove batteries if possible',
+                'Check for manufacturer take-back programs'
+            ],
+            centers: [3, 10]
+        },
         'item': {
             name: 'General Item',
             category: 'Check Guidelines',
@@ -455,13 +617,13 @@ function getItemDetails(itemName) {
             processingTime: '1.5s',
             action: 'Check Guidelines',
             actionDescription: 'Consult local recycling rules',
-            description: 'This item requires specific disposal guidelines. Check with local authorities.',
+            description: 'This item requires specific disposal guidelines. Check with local authorities for proper disposal methods.',
             tips: [
-                'Check local recycling guidelines',
-                'Visit the map for nearby centers',
-                'Contact municipal waste department'
+                'Check local waste management guidelines',
+                'Contact your municipal recycling center',
+                'Consider if item can be donated or reused'
             ],
-            centers: [1] // General recycling center
+            centers: [1]
         }
     };
 
@@ -503,44 +665,48 @@ function performMockAnalysis() {
 }
 
 // Drag and drop functionality
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const uploadArea = document.getElementById('fileUploadArea');
-    
+    const fileInput = document.getElementById('imageUpload');
+
+    // Connect file input to handleImageUpload
+    fileInput.addEventListener('change', handleImageUpload);
+
     // Prevent default drag behaviors
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
         uploadArea.addEventListener(eventName, preventDefaults, false);
         document.body.addEventListener(eventName, preventDefaults, false);
     });
-    
+
     // Highlight drop area when item is dragged over it
     ['dragenter', 'dragover'].forEach(eventName => {
         uploadArea.addEventListener(eventName, highlight, false);
     });
-    
+
     ['dragleave', 'drop'].forEach(eventName => {
         uploadArea.addEventListener(eventName, unhighlight, false);
     });
-    
+
     // Handle dropped files
     uploadArea.addEventListener('drop', handleDrop, false);
-    
+
     function preventDefaults(e) {
         e.preventDefault();
         e.stopPropagation();
     }
-    
+
     function highlight() {
         uploadArea.classList.add('highlight');
     }
-    
+
     function unhighlight() {
         uploadArea.classList.remove('highlight');
     }
-    
+
     function handleDrop(e) {
         const dt = e.dataTransfer;
         const files = dt.files;
-        
+
         if (files.length) {
             handleImageUpload({ target: { files: files } });
         }

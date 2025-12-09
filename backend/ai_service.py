@@ -1,48 +1,76 @@
-import cv2
-import numpy as np
+"""
+EcoWise AI Service - Enhanced YOLOv8 Object Detection
+"""
 from ultralytics import YOLO
 import os
 
 class EcoWiseAI:
     def __init__(self):
-        # Load YOLOv8 model (will download automatically on first run)
-        self.model = YOLO('yolov8n.pt')
-        print("🤖 YOLOv8 AI Model Loaded Successfully!")
+        print("🤖 Initializing EcoWise AI...")
         
-        # Common objects for recycling/donation
+        # Load YOLOv8 model
+        model_path = 'yolov8n.pt'
+        if not os.path.exists(model_path):
+            print("⚠️ Model not found, downloading...")
+        
+        self.model = YOLO(model_path)
+        print("✅ YOLOv8 Model Loaded Successfully!")
+        
+        # Define recyclable and donation objects
         self.recyclable_objects = {
-            'bottle', 'cup', 'book', 'cell phone', 'laptop', 
-            'vase', 'chair', 'teddy bear', 'handbag', 'backpack'
+            'bottle', 'cup', 'can', 'wine glass', 'bowl',
+            'laptop', 'mouse', 'keyboard', 'cell phone', 'tv', 'remote',
+            'book', 'clock', 'vase', 'scissors', 'teddy bear',
+            'hair drier', 'toothbrush', 'microwave', 'oven', 'toaster',
+            'sink', 'refrigerator', 'potted plant', 'chair', 'couch',
+            'bed', 'dining table', 'toilet', 'backpack', 'handbag',
+            'suitcase', 'frisbee', 'skis', 'snowboard', 'sports ball',
+            'kite', 'baseball bat', 'baseball glove', 'skateboard',
+            'surfboard', 'tennis racket'
         }
         
         self.donation_objects = {
-            'book', 'teddy bear', 'handbag', 'backpack', 'sports ball'
+            'book', 'laptop', 'cell phone', 'teddy bear', 'backpack',
+            'handbag', 'suitcase', 'chair', 'couch', 'bed', 'dining table',
+            'potted plant', 'clock', 'vase'
         }
     
     def detect_objects(self, image_path):
         """
-        Detect objects in an image using YOLOv8
-        Returns: List of detected objects with confidence
+        Detect objects in an image using YOLOv8 with improved sensitivity
         """
         try:
-            # Run YOLOv8 inference
-            results = self.model(image_path)
+            print(f"🔍 Detecting objects in: {image_path}")
+            
+            # Run detection with lower confidence threshold for better detection
+            results = self.model(image_path, conf=0.20)
             
             detected_items = []
+            
+            # Process results
             for result in results:
-                for box in result.boxes:
-                    # Get object info
+                boxes = result.boxes
+                names = result.names
+                
+                for box in boxes:
                     class_id = int(box.cls[0])
                     confidence = float(box.conf[0])
-                    object_name = self.model.names[class_id]
+                    object_name = names[class_id]
                     
-                    # Only include high-confidence detections
-                    if confidence > 0.5:
+                    # Include detections with confidence > 0.20
+                    if confidence > 0.20:
                         detected_items.append({
                             'name': object_name,
                             'confidence': confidence,
-                            'bbox': box.xyxy[0].tolist()  # Bounding box coordinates
+                            'bbox': box.xyxy[0].tolist()
                         })
+                        print(f"   📌 Detected: {object_name} (confidence: {confidence:.2f})")
+            
+            print(f"✅ Total detected: {len(detected_items)} objects")
+            if detected_items:
+                print(f"   🎯 Objects: {[item['name'] for item in detected_items]}")
+            else:
+                print(f"   ⚠️ No objects detected above confidence threshold")
             
             return detected_items
             
@@ -52,36 +80,79 @@ class EcoWiseAI:
     
     def get_recommendation(self, detected_objects):
         """
-        Generate recycling/donation recommendations based on detected objects
+        Generate detailed recycling/donation recommendations with categories
         """
         if not detected_objects:
-            return "No objects detected. Please try another image."
+            return {
+                "recommendations": ["No objects detected. Please try uploading a clearer image with better lighting."],
+                "eco_points": 0,
+                "detected_count": 0,
+                "categories": {
+                    "recyclable": [],
+                    "donatable": [],
+                    "general": []
+                }
+            }
         
-        recommendations = []
+        recyclable = []
+        donatable = []
+        general = []
         eco_points = 0
         
         for obj in detected_objects:
             obj_name = obj['name']
             confidence = obj['confidence']
+            confidence_pct = int(confidence * 100)
             
             if obj_name in self.recyclable_objects:
                 if obj_name in self.donation_objects:
-                    recommendations.append(f"♻️ Donate the {obj_name} to local NGO")
+                    donatable.append({
+                        "item": obj_name,
+                        "action": f"Donate to local NGO or charity ({confidence_pct}% confidence)",
+                        "points": 15
+                    })
                     eco_points += 15
                 else:
-                    recommendations.append(f"♻️ Recycle the {obj_name} at nearest center")
+                    recyclable.append({
+                        "item": obj_name,
+                        "action": f"Recycle at nearest recycling center ({confidence_pct}% confidence)",
+                        "points": 10
+                    })
                     eco_points += 10
             else:
-                recommendations.append(f"ℹ️ Check local guidelines for {obj_name}")
+                general.append({
+                    "item": obj_name,
+                    "action": f"Check local waste guidelines ({confidence_pct}% confidence)",
+                    "points": 5
+                })
                 eco_points += 5
         
-        # Remove duplicates
-        unique_recommendations = list(set(recommendations))
+        # Build recommendations list
+        recommendations = []
+        
+        if recyclable:
+            recommendations.append(f"♻️ RECYCLABLE: {', '.join([r['item'] for r in recyclable])}")
+        
+        if donatable:
+            recommendations.append(f"🤝 DONATABLE: {', '.join([d['item'] for d in donatable])}")
+        
+        if general:
+            recommendations.append(f"ℹ️ CHECK GUIDELINES: {', '.join([g['item'] for g in general])}")
         
         return {
-            "recommendations": unique_recommendations,
+            "recommendations": recommendations if recommendations else ["Objects detected but no specific recommendations available."],
             "eco_points": eco_points,
-            "detected_count": len(detected_objects)
+            "detected_count": len(detected_objects),
+            "categories": {
+                "recyclable": recyclable,
+                "donatable": donatable,
+                "general": general
+            },
+            "details": {
+                "total_items": len(detected_objects),
+                "recyclable_count": len(recyclable),
+                "donatable_count": len(donatable)
+            }
         }
 
 # Create global AI instance
